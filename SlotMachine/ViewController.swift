@@ -33,6 +33,15 @@ class ViewController: UIViewController {
     var betMaxButton: UIButton!
     var spinButton: UIButton!
     
+// ARRAY OF ARRAY OF SLOT INSTANCES
+    var slots:[[Slot]] = []
+    
+// STATS
+    var credits = 0
+    var currentBet = 0
+    var winnings = 0
+    
+    
 // CONSTANTS
 
     var titleLabel: UILabel!
@@ -57,11 +66,12 @@ class ViewController: UIViewController {
 
         setupContainerViews()
         setupFirstContainer(self.firstContainer)
-        setupSecondContainer(self.secondContainer)
         setupThirdContainer(self.thirdContainer)
         setupFourthContainer(self.fourthContainer)
-    
-    }
+        
+        // Reset All and load secondContainer
+        hardReset()
+        }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -73,7 +83,8 @@ class ViewController: UIViewController {
     
    /// REST BUTTON ACTION
     func restButtonPressed (button:UIButton) {
-        println("reset button pressed")
+
+        hardReset()
     }
     
   /// BET ONE BUTTON ACTION
@@ -88,7 +99,16 @@ class ViewController: UIViewController {
     
   /// SPIN BUTTON ACTION
     func spinButtonPressed (button:UIButton) {
-        println("SPIN")
+        
+        // Remove any old imageViews
+        self.removeSlotImageViews()
+        
+        // Create a new set of slots when spin button is pressed
+        slots = Factory.createSlots()
+        
+        // Update secondContainer with new set of slots
+        setupSecondContainer(self.secondContainer)
+        
     }
     
 // HELPER FUNCTION
@@ -121,7 +141,9 @@ class ViewController: UIViewController {
     }
     
     
+//MARK: - CONTAINER SETUPS
     
+// FIRST CONTAINER
     func setupFirstContainer(containerView:UIView) {
         
         self.titleLabel = UILabel()
@@ -133,14 +155,35 @@ class ViewController: UIViewController {
         containerView.addSubview(self.titleLabel)
     }
     
-    
+// SECOND CONTAINER
     func setupSecondContainer(containerView:UIView) {
         
         for var containerNumber = 0; containerNumber < kNumberOfContainers; ++containerNumber {
             
             for var slotNumber = 0; slotNumber < kNumberOfSlots; ++slotNumber {
                 
+                // Create instance of Slot
+                var slot:Slot
+                
                 var slotImageView = UIImageView()
+                
+                // Check if a slot has been created (Spin button pressed)
+                if slots.count != 0 {
+                    
+                    /// Create slotContainer instance and set using the slots Array and using the current containerNumber for the index#
+                    let slotContainer = slots[containerNumber]
+                    
+                    /// set the slot from the current slotArray/Container using the current slotNumber for the index #
+                    slot = slotContainer[slotNumber]
+                    
+                    /// set the slot image using the image property of the current slot
+                    slotImageView.image = slot.image
+                }
+                else {
+                    // else: just display a bunch of aces
+                    slotImageView.image = UIImage(named: "Ace")
+                }
+                
                 slotImageView.backgroundColor = UIColor.yellowColor()
                 
                 slotImageView.frame = CGRect(x: containerView.bounds.origin.x + (containerView.bounds.size.width * CGFloat(containerNumber) * kThird), y: containerView.bounds.origin.y + (containerView.bounds.size.height * CGFloat(slotNumber) * kThird), width: containerView.bounds.width * kThird - kMarginForSlot, height: containerView.bounds.height * kThird - kMarginForSlot)
@@ -150,7 +193,7 @@ class ViewController: UIViewController {
         }
     }
     
-    
+// THIRD CONTAINER
     func setupThirdContainer(containerView: UIView) {
       
     /// CREDITS LABEL
@@ -223,7 +266,9 @@ class ViewController: UIViewController {
         containerView.addSubview(self.winnerPaidTitleLabel)
     }
 
-    
+
+// FOURTH CONTAINER
+
     func setupFourthContainer (containerView: UIView) {
         
         
@@ -284,19 +329,58 @@ class ViewController: UIViewController {
         // Adding target as self (this view controller), action is a function that will be called, controlEvent is the event that will cause the button to activate.
         self.spinButton.addTarget(self, action: "spinButtonPressed:", forControlEvents: UIControlEvents.TouchUpInside)
         containerView.addSubview(self.spinButton)
-
-        
-
-        
-        
-        
-        
-        
     }
     
+// REMOVE SLOT IMAGEVIEWS: Removes the current set of slot images before the next set of slots are loaded. This helps clear memory usage.
+    func removeSlotImageViews() {
+        
+        // does the secondContainer exsist? (this is not a necessary check because of the Optionals used before.
+        if self.secondContainer != nil {
+            
+            // Using an optional because if instance does not have a value, we want it to pass nil not crash the program
+            // Create optional instance of UIView set equal to the secondContainer
+            let container: UIView? = self.secondContainer
+            
+            // Create optional Array and set it to the secondContainer's subviews (slot images)
+            let subViews: Array? = container!.subviews
+            
+            // for every view in the subViews array...
+            for view in subViews! {
+                
+                // ...remove the view from its superview
+                view.removeFromSuperview()
+            }
+        }
+    }
+   
+// HARD RESET FUNCTION
+    func hardReset() {
+        
+        // call helper function to remove the current slot imageViews
+        removeSlotImageViews()
+        
+        // Call the removeAll array method on the slots array. Keep capacity since we know that the next time the game is played it will need the same amount of slots loaded.
+        slots.removeAll(keepCapacity: true)
+        
+        // Call to refresh the Second Container
+        self.setupSecondContainer(self.secondContainer)
+        
+        // Reset all stats
+        credits = 50
+        winnings = 0
+        currentBet = 0
+        
+        // Call function to update STATS Labels
+        updateMainView()
+    }
     
-    
-    
+// UPDATE STATS LABELS
+    func updateMainView() {
+        
+        self.creditsLabel.text = "\(credits)"
+        self.betLabel.text = "\(currentBet)"
+        self.winnerPaidLabel.text = "\(winnings)"
+    }
     
     
 
