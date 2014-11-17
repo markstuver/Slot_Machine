@@ -90,18 +90,28 @@ class ViewController: UIViewController {
   /// BET ONE BUTTON ACTION
     func betOneButtonPressed (button:UIButton) {
         
+        // If user does not have enough credits
         if credits <= 0 {
             
+            // Show this alert
             showAlertWithText(header: "No More Credits", message: "Reset Game")
             
         }
         else {
+            // else... if currentBet is less then 5
             if currentBet < 5 {
+                
+                // add credit to bet as user press button
                 currentBet += 1
+                
+                // subtract credit due to bet
                 credits -= 1
+                
+                // update view
                 updateMainView()
             }
             else {
+                // else user has 5 and trying to go higher and they cant so show allert
                 showAlertWithText(message: "You can only bet 5 credits at a time!")
             }
         }
@@ -110,9 +120,40 @@ class ViewController: UIViewController {
   /// BET MAX BUTTON ACTION
     func betMaxButtonPressed (button:UIButton) {
         
-        currentBet = 5
-        credits -= 5
-        updateMainView()
+        // if the user does not have enough credits
+        if credits < 5 {
+            
+            // show alert
+            showAlertWithText(header: "Not Enough Credits", message: "Bet Less")
+        }
+        else {
+        
+            // else.. if current bet is less than 5
+            if currentBet < 5 {
+                
+                // create instance equal to the max bet (5) minus the currentBet amount
+                var creditsToBetMax = 5 - currentBet
+                
+                // subtract the amount that will be added to the current bet inorder to make it max
+                credits -= creditsToBetMax
+                
+                // add the amount needed to make currentBet at its max (5)
+                currentBet += creditsToBetMax
+                
+                // Update View
+                updateMainView()
+            }
+            else {
+                
+                showAlertWithText(message: "You can only bet 5 credits at a time!") 
+            }
+        }
+        
+//        // Set current bet to the max (5)
+//        currentBet = 5
+//        //
+//        credits -= 5
+//        updateMainView()
     }
     
   /// SPIN BUTTON ACTION
@@ -126,6 +167,21 @@ class ViewController: UIViewController {
         
         // Update secondContainer with new set of slots
         setupSecondContainer(self.secondContainer)
+        
+        // Create a variable and set to the return of calling the computerWinnings class method
+        var winningsMultiplier = SlotBrain.computeWinnings(slots)
+        
+        // Set winnings equal to the returned winningsMultiplier times the currentBet (The more credits bet the higher the winnings
+        winnings = winningsMultiplier * currentBet
+        
+        // Add winnings to user's credits
+        credits += winnings
+        
+        // Reset current Bet to 0
+        currentBet = 0
+        
+        // Update view
+        updateMainView()
         
     }
     
